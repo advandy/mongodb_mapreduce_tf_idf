@@ -13,3 +13,4 @@ run the query to see the result
 db.results.find({value: {$gt: 0.003}, _id:/text1/}).sort({value: -1})
 db.results.find({value: {$gt: 0.003}, _id:/text2/}).sort({value: -1})
 db.results.find({value: {$gt: 0.003}, _id:/text3/}).sort({value: -1})
+
