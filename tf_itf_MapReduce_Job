@@ -1,0 +1,70 @@
+var mapper1 = function() {
+    var aWords = this.content.split(" ");
+    for (var i = 0; i < aWords.length; i++) {
+        var word = aWords[i].trim();
+        if (word !== "") {
+            emit(word + "@" + this.doc, 1/aWords.length);
+        }
+    }
+};
+
+var reducer1 = function(key, values) {
+    return Array.sum(values);
+};
+
+db.sourceData.mapReduce(
+    mapper1,
+    reducer1,
+    {
+        out: "tf_results"
+    }
+);
+
+var mapper2 = function() {
+    var key = this._id;
+    var term = key.split("@")[0];
+    var doc = key.split("@")[1];
+    var obj = {};
+    obj[doc] = this.value*Math.log(docCount);
+    emit(term, obj);
+}
+
+var reducer2 = function(key, values) {
+    var obj = {};
+    for (var i = 0; i<values.length; i++) {
+        for (var key in values[i]) {
+            obj[key] = values[i][key]/Math.log(docCount)*Math.log(docCount/values.length);
+        }
+    }
+
+    return obj;
+}
+
+db.tf_results.mapReduce(
+    mapper2,
+    reducer2,
+    {
+        out: "tfidf_results",
+        scope: {
+            docCount: 3
+        }
+    }
+);
+
+var mapper3 = function() {
+    for (var key in this.value) {
+        emit(this._id + "@" + key, this.value[key]);
+    }
+};
+
+var reducer3 = function(key, values) {
+    return 1;
+}
+
+db.tfidf_results.mapReduce(
+    mapper3,
+    reducer3,
+    {
+        out: "results"
+    }
+);
